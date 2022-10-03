@@ -48,6 +48,7 @@ pub struct Struct {
     pub named: bool,
     pub fields: Vec<Field>,
     pub attributes: Vec<Attribute>,
+    pub has_generics: bool,
 }
 
 #[derive(Debug)]
@@ -346,6 +347,32 @@ fn next_fields(
 fn next_struct(mut source: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Struct {
     let struct_name = next_ident(&mut source).expect("Unnamed structs are not supported");
 
+    let has_generics = if let Some(_) = next_punct(&mut source) {
+        let _generic = next_ident(&mut source);
+        if let Some(_) = next_punct(&mut source) {
+            let _binding = next_ident(&mut source);
+
+            let mut next = next_punct(&mut source).unwrap();
+
+            if next == ":" {
+                next_punct(&mut source);
+                next_ident(&mut source);
+
+                next = next_punct(&mut source).unwrap();
+            }
+            
+                if next == "=" {
+                let _default = next_ident(&mut source);
+                next_punct(&mut source);
+            }
+        } else {
+            next_punct(&mut source);
+        }
+        true
+    } else {
+        false
+    };
+
     let group = next_group(&mut source);
     // unit struct
     if group.is_none() {
@@ -357,6 +384,7 @@ fn next_struct(mut source: &mut Peekable<impl Iterator<Item = TokenTree>>) -> St
             fields: vec![],
             attributes: vec![],
             named: false,
+            has_generics,
         };
     };
     let group = group.unwrap();
@@ -380,6 +408,7 @@ fn next_struct(mut source: &mut Peekable<impl Iterator<Item = TokenTree>>) -> St
         named,
         fields,
         attributes: vec![],
+        has_generics,
     }
 }
 

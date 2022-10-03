@@ -216,14 +216,20 @@ pub fn derive_de_json_struct(struct_: &Struct) -> TokenStream {
             || shared::attrs_default_with(&struct_.attributes).is_some(),
         &struct_.fields[..],
     );
+    
+    let (impl_generics, struct_generics) = if struct_.has_generics {
+        ("<E: crate::Extensions>", "<E>")
+    } else {
+        ("", "")
+    };
 
     format!(
-        "impl DeJson for {} {{
+        "impl{} DeJson for {}{} {{
             fn de_json(s: &mut nanoserde::DeJsonState, i: &mut core::str::Chars) -> core::result::Result<Self,
             nanoserde::DeJsonErr> {{
                 core::result::Result::Ok({{ {} }})
             }}
-        }}", struct_.name, body)
+        }}", impl_generics, struct_.name, struct_generics, body)
         .parse().unwrap()
 }
 
